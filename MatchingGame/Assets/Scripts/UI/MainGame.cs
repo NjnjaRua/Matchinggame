@@ -1,12 +1,14 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class MainGame : MonoBehaviour {
     [SerializeField]
-    public TextMeshPro txtScore;
+    public Text txtScore;
 
     private UserData userData;
     SoundManager soundManager;
@@ -25,24 +27,42 @@ public class MainGame : MonoBehaviour {
     {
         if (actionScoreUI == null)
             actionScoreUI = new UnityAction(OnUpdateScoreUI);
-        EventManager.StartListening(ConstantManager.EVENT_UPDATE_SCORE, OnUpdateScoreUI);
+        if(EventManager.instance != null)
+            EventManager.StartListening(ConstantManager.EVENT_UPDATE_SCORE, OnUpdateScoreUI);
     }
 
     private void OnDisable()
     {
-        EventManager.StopListening(ConstantManager.EVENT_UPDATE_SCORE, OnUpdateScoreUI);
+        if (EventManager.instance != null)
+            EventManager.StopListening(ConstantManager.EVENT_UPDATE_SCORE, OnUpdateScoreUI);
     }
 
     void OnUpdateScoreUI()
     {
-        if(userData != null)
+        if (userData != null && txtScore != null)
+        {
             txtScore.text = Util.NumberFormat(userData.GetScore());
+            PlayAnim();
+        }
     }
 
     void UpdateUI()
     {
-        if(userData != null)
+        if (userData != null && txtScore != null)
+        {
             txtScore.text = Util.NumberFormat(userData.GetScore());
+            PlayAnim();
+        }
         //todo more others UI
+    }
+
+    void PlayAnim()
+    {
+        if (txtScore == null)
+            return;
+        Sequence seq = DOTween.Sequence();
+        float duration = 0.3f;
+        seq.Append(txtScore.transform.DOScale(new Vector3(1.2f, 1.2f, 1.2f), duration));
+        seq.Append(txtScore.transform.DOScale(new Vector3(1f, 1f, 1f), duration));
     }
 }

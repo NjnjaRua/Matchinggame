@@ -40,6 +40,8 @@ public class EventManager : MonoBehaviour {
 
     public static void StartListening(string eventName, UnityAction listener)
     {
+        if (instance == null)
+            return;
         UnityEvent thisEvent = null;
         if (instance.eventDictionary.TryGetValue(eventName, out thisEvent))
         {
@@ -65,6 +67,8 @@ public class EventManager : MonoBehaviour {
 
     public static void TriggerEvent(string eventName)
     {
+        if (instance == null)
+            return;
         UnityEvent thisEvent = null;
         if (instance.eventDictionary.TryGetValue(eventName, out thisEvent))
         {

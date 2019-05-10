@@ -41,8 +41,9 @@ public class ConstantManager : MonoBehaviour {
 
     [Header("Constant")]
     public const int MAX_ITERATION = 100;
-    public const int SIZE_NODE = 128;
+    public const int MAX_TEXTURE_SIZE = 128;
     public const float DELAY_TIME = 0.4f;
+    public const int NODE_SIZE = 72;
 
     [Header("Saved Keys")]
     public const string SAVE_BEST_SCORE = "SAVE_BEST_SCORE";

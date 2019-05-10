@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class NodeController : MonoBehaviour {
+public class NodeController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
     [Header("Node Properties")]
     public int column;
     public int row;
@@ -24,13 +26,19 @@ public class NodeController : MonoBehaviour {
 
     private Vector2 firstPosTouch;
     private Vector2 finalPosTouch;
+
+    private Vector2 firstPosDrag;
+    private Vector2 finalPosDrag;
+
     private Vector2 tempPosition;
 
     public GameObject targetNode;
     private float distanceMove = 0.1f;
     private float durationMove = 0.8f;
-    private int cellCheck = 1;
+    private float cellCheck = 1f;
     SoundManager soundManager;
+    int sizeX = -1, sizeY = -1;
+    public bool allowDrag;
 
     // Use this for initialization
     void Start ()
@@ -42,19 +50,30 @@ public class NodeController : MonoBehaviour {
             nodeMatches = gController.nodeMatches;
         }
         soundManager = SoundManager.getInstance();
+        RectTransform rectTrans = this.gameObject.GetComponent<RectTransform>();
+        if(rectTrans != null)
+        {
+            Vector2 sizeDelta = rectTrans.sizeDelta;
+            sizeX = (int)sizeDelta.x;
+            sizeY = (int)sizeDelta.y;
+        }
+        else
+        {
+            sizeX = sizeY = ConstantManager.NODE_SIZE;
+        }
     }
 
     void Update()
     {
-        targetX = column;
-        targetY = row;
+        targetX = (column * sizeX) + sizeX;
+        targetY = (row * sizeY) + sizeY;
 
         //Move Horizontal
-        if (Mathf.Abs(targetX - transform.position.x) > distanceMove)
+        if (Mathf.Abs(targetX - transform.localPosition.x) > distanceMove)
         {
             //Move Horizontal
-            tempPosition = new Vector2(targetX, transform.position.y);
-            transform.position = Vector2.Lerp(transform.position, tempPosition, durationMove);
+            tempPosition = new Vector2(targetX, transform.localPosition.y);
+            transform.localPosition = Vector2.Lerp(transform.localPosition, tempPosition, durationMove);
             
             if (mainNode.allCreatedNodes[column, row] != this.gameObject)
                 mainNode.allCreatedNodes[column, row] = this.gameObject;
@@ -62,16 +81,16 @@ public class NodeController : MonoBehaviour {
         }
         else
         {
-            tempPosition = new Vector2(targetX, transform.position.y);
-            transform.position = tempPosition;
+            tempPosition = new Vector2(targetX, transform.localPosition.y);
+            transform.localPosition = tempPosition;
 
         }
 
         //Move Vertical
-        if (Mathf.Abs(targetY - transform.position.y) > distanceMove)
+        if (Mathf.Abs(targetY - transform.localPosition.y) > distanceMove)
         {           
-            tempPosition = new Vector2(transform.position.x, targetY);
-            transform.position = Vector2.Lerp(transform.position, tempPosition, durationMove);
+            tempPosition = new Vector2(transform.localPosition.x, targetY);
+            transform.localPosition = Vector2.Lerp(transform.localPosition, tempPosition, durationMove);
             if (mainNode.allCreatedNodes[column, row] != this.gameObject)
             {
                 mainNode.allCreatedNodes[column, row] = this.gameObject;
@@ -80,70 +99,99 @@ public class NodeController : MonoBehaviour {
         }
         else
         {
-            tempPosition = new Vector2(transform.position.x, targetY);
-            transform.position = tempPosition;
+            tempPosition = new Vector2(transform.localPosition.x, targetY);
+            transform.localPosition = tempPosition;
         }
     }
 
     #region Mouse Event
-    private void OnMouseDown()
+    //private void OnMouseDown()
+    public void OnPointerDown(PointerEventData pointerEventData)
     {
-        if(mainNode != null)
+        if(mainNode != null && mainNode.CurrentState == State.READY)
         {
-            if (mainNode.CurrentState == State.READY)
+            if (soundManager != null)
+                soundManager.PlaySound(SoundId.TOUCH);
+            bool isSwapDirect = false;                
+            if (mainNode.IsShowingHighLight())
             {
-                if (soundManager != null)
-                    soundManager.PlaySound(SoundId.TOUCH);
-                bool isSwapDirect = false;                
-                if (mainNode.IsShowingHighLight())
+                Vector2 posHighLight = mainNode.GetHighlightInfo();
+                float distanceX = Mathf.Abs(column - posHighLight.x);
+                float distanceY = Mathf.Abs(row - posHighLight.y);
+                //dont allow diagonal move
+                if ((distanceX == 0 && distanceY == cellCheck) || (distanceY == 0 && distanceX == cellCheck))
                 {
-                    Vector2 posHighLight = mainNode.GetPosHighLight();
-                    float distanceX = Mathf.Abs(column - posHighLight.x);
-                    float distanceY = Mathf.Abs(row - posHighLight.y);
-                    //dont allow diagonal move
-                    if ((distanceX == 0 && distanceY == cellCheck) || (distanceY == 0 && distanceX == cellCheck))
-                    {
-                        mainNode.HideHighLight();
-                        isSwapDirect = true;
-                        firstPosTouch = posHighLight;
-                        finalPosTouch = new Vector2(column, row);
-                        CheckSwapDirect();
-                    }                    
+                    mainNode.HideHighLight();
+                    isSwapDirect = true;
+                    firstPosTouch = posHighLight;
+                    finalPosTouch = new Vector2(column, row);
+                    CheckSwapDirect();
                 }
+            }
                 
-                if(!isSwapDirect)
+            if(!isSwapDirect)
+            {
+                firstPosTouch = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                if(mainNode != null)
                 {
-                    firstPosTouch = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    if(mainNode != null)
-                    {
-                        mainNode.ShowHightLight(new Vector2(column, row));
-                    }
+                    mainNode.SetNodeHighlightPos(column, row);
                 }
             }
         }
     }
 
-    private void OnMouseUp()
+    //private void OnMouseUp()
+    public void OnPointerUp(PointerEventData pointerEventData)
     {
-        if(mainNode != null)
+        
+    }
+
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (mainNode != null && mainNode.CurrentState == State.READY)
         {
-            if (mainNode.CurrentState == State.READY)
+            allowDrag = true;
+            firstPosDrag = eventData.pressPosition;
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (mainNode != null && mainNode.CurrentState == State.READY)
+        {
+            if (!allowDrag)
+                return;
+            finalPosDrag = eventData.position;
+            float distanceX = Mathf.Abs(finalPosDrag.x - firstPosDrag.x);
+            float distanceY = Mathf.Abs(finalPosDrag.y - firstPosDrag.y);
+            if (CheckSwapBySwipeAngle())
             {
-                finalPosTouch = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                CheckSwapBySwipeAngle();
+                allowDrag = false;
+                mainNode.HideHighLight();
             }
         }
     }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (mainNode != null && mainNode.CurrentState == State.READY)
+        {
+            mainNode.HideHighLight();
+        }
+    }
+
 
     #endregion
 
     #region Swap By Swipe Angle
 
-    void CheckSwapBySwipeAngle()
+    bool CheckSwapBySwipeAngle()
     {
-        if (Mathf.Abs(finalPosTouch.y - firstPosTouch.y) > swipeDistance || Mathf.Abs(finalPosTouch.x - firstPosTouch.x) > swipeDistance)
+        
+        if (Mathf.Abs(finalPosDrag.y - firstPosDrag.y) > ConstantManager.NODE_SIZE || Mathf.Abs(finalPosDrag.x - firstPosDrag.x) > ConstantManager.NODE_SIZE)
         {            
-            swipeAngle = Mathf.Atan2(finalPosTouch.y - firstPosTouch.y, finalPosTouch.x - firstPosTouch.x) * 180 / Mathf.PI;
+            swipeAngle = Mathf.Atan2(finalPosDrag.y - firstPosDrag.y, finalPosDrag.x - firstPosDrag.x) * 180 / Mathf.PI;
             if (MoveNodeBySwipAngle())
             {
                 if (soundManager != null)
@@ -151,12 +199,15 @@ public class NodeController : MonoBehaviour {
                 StartCoroutine(OnMoveNode());
                 mainNode.CurrentState = State.PAUSE;
                 mainNode.currNode = this;
+                return true;
             }
         }
         else
         {
             mainNode.CurrentState = State.READY;
+            return false;
         }
+        return false;
     }
 
     bool MoveNodeBySwipAngle()

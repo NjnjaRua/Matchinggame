@@ -13,7 +13,7 @@ public class AssetPostProcessor : AssetPostprocessor
         if(assetPath.Contains("Images/Nodes"))
         {
             TextureImporter _textureImporter = (TextureImporter)assetImporter;
-            _textureImporter.maxTextureSize = ConstantManager.SIZE_NODE;
+            _textureImporter.maxTextureSize = ConstantManager.MAX_TEXTURE_SIZE;
 
             //todo: can define format, compress
         }

@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour {
 
     [SerializeField]
-    private TextMeshPro txtBestScore;
+    private Text txtBestScore;
 
     [SerializeField]
-    private TextMeshPro txtHint;
+    private Text txtHint;
 
     [SerializeField]
     private GameObject btnPlay;
@@ -33,26 +34,6 @@ public class MainMenu : MonoBehaviour {
         Util.PlayAnim(btnPlay, btnPlay.transform.localScale, duration);
     }
 
-    private void Update()
-    {
-        if (Input.GetButtonDown("Fire1"))
-        {
-            RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-            if (hit.transform != null)
-            {
-                if ((hit.transform.gameObject.name == btnPlay.name))
-                {
-                    if (soundManager != null)
-                        soundManager.PlaySound(SoundId.TOUCH);
-                    hit.transform.localScale = new Vector3(0.7f, 0.7f, 0);
-                    if (MainController.GetInstance())
-                        MainController.GetInstance().SwitchScene(MainController.SCENE_MAIN_GAME);
-                    Time.timeScale = 1;
-                }
-            }
-        }
-    }
-
     private string GetRandomHint()
     {
         List<string> hints = ConstantManager.GetHintConst();
@@ -60,5 +41,13 @@ public class MainMenu : MonoBehaviour {
             return ConstantManager.HINT_DEFAULT;
         int random = Random.Range(0, hints.Count);
         return hints[random];
+    }
+
+    public void OnPlay()
+    {
+        if (soundManager != null)
+            soundManager.PlaySound(SoundId.TOUCH);
+        if (MainController.GetInstance())
+            MainController.GetInstance().SwitchScene(MainController.SCENE_MAIN_GAME);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour {
     private static GameController instance;
@@ -12,7 +13,7 @@ public class GameController : MonoBehaviour {
     public MainGame mainGame;
 
     [SerializeField]
-    private TextMeshPro flyText;
+    private Text flyText;
 
     private int textMeshProSortingLayer = 20;
 
@@ -31,49 +32,59 @@ public class GameController : MonoBehaviour {
         return instance;
     }
 
-    public IEnumerator FadeSpriteToFullAlpha(float t, SpriteRenderer spriteRenderer)
+    public IEnumerator FadeSpriteToFullAlpha(float t, Image img)
     {
-        spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, 0);
-        while (spriteRenderer.color.a < 1.0f)
+        if(img != null)
         {
-            spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, spriteRenderer.color.a + (Time.deltaTime / t));
-            yield return null;
+            img.color = new Color(img.color.r, img.color.g, img.color.b, 0);
+            while (img.color.a < 1.0f)
+            {
+                img.color = new Color(img.color.r, img.color.g, img.color.b, img.color.a + (Time.deltaTime / t));
+                yield return null;
+            }
         }
     }
 
-    public IEnumerator FadeSpriteToZeroAlpha(float t, SpriteRenderer spriteRenderer)
+    public IEnumerator FadeSpriteToZeroAlpha(float t, Image img)
     {
-        spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, 1);
-        while (spriteRenderer.color.a > 0.0f)
+        if(img != null)
         {
-            spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, spriteRenderer.color.a - (Time.deltaTime / t));
-            yield return null;
+            img.color = new Color(img.color.r, img.color.g, img.color.b, 1);
+            while (img.color.a > 0.0f)
+            {
+                img.color = new Color(img.color.r, img.color.g, img.color.b, img.color.a - (Time.deltaTime / t));
+                yield return null;
+            }
         }
     }
 
-    public void ShowFlyScore(string txt, Transform trans = null, float time = 1)
+    public void ShowFlyScore(string txt, Transform trans = null, float time = 1f)
     {
         if (flyText == null)
             return;
         if (!flyText.gameObject.activeInHierarchy)
         {
-            Transform flyTextTrans = flyText.gameObject.GetComponent<Transform>();
-            const int DELTA = 10;
+            RectTransform flyTextTrans = flyText.gameObject.GetComponent<RectTransform>();
+            const int DELTA = 2;
             Vector3 pos;
-            TextMeshPro text = flyText.gameObject.GetComponent<TextMeshPro>();
-            text.sortingOrder = textMeshProSortingLayer;
+            Text text = flyText.gameObject.GetComponent<Text>();
+
             text.text = txt;
             flyText.gameObject.SetActive(true);
-            if(trans != null)
+            float w = Util.calculateTextWidth(text.text, text);
+            if (w >= Screen.width * 0.7f)
+                w = Screen.width * 0.7f;
+            Vector3 size = flyTextTrans.sizeDelta;
+            size.x = w;
+            flyTextTrans.sizeDelta = size;
+
+            if (trans != null)
                 pos = trans.transform.position;
             else
                 pos = Util.GetPostConvert(Input.mousePosition);
             flyTextTrans.position = pos;
-            if (mainGame != null && mainGame.txtScore != null)
-                pos = mainGame.txtScore.transform.position;
-            else
-                pos.y += DELTA;
-            Tweener t = flyTextTrans.DOMove(pos, time);
+            pos.y += DELTA;
+            Tweener t = flyTextTrans.DOMoveY(pos.y, time);
             t.OnComplete(() =>
             {
                 flyText.gameObject.SetActive(false);

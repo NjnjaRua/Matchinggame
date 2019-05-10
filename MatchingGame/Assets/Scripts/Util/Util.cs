@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Util
 {
@@ -68,5 +69,11 @@ public class Util
             return 0;
         return (Mathf.RoundToInt(numMatchedNode / 3f));
 
+    }
+
+    public static float calculateTextWidth(string message, Text txt)
+    {
+        Canvas.ForceUpdateCanvases();
+        return txt.preferredWidth;
     }
 }

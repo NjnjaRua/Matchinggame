@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum State
 {
@@ -47,7 +48,7 @@ public class MainNode : MonoBehaviour {
     private GameObject disableNodePrefab;
 
     [SerializeField]
-    private GameObject highLightPrefab;
+    private NodeHighlight nodeHighLigh;
 
     [Header("Root")]
     [SerializeField]
@@ -58,7 +59,7 @@ public class MainNode : MonoBehaviour {
 
     [Header("Others")]
     [SerializeField]
-    private SpriteRenderer spriteBackground;
+    private Image imgBackground;
 
     [SerializeField]
     public float fadeTime = 1f;
@@ -81,7 +82,7 @@ public class MainNode : MonoBehaviour {
         userData = UserData.GetInstance();
         CurrentState = State.PAUSE;
         Init();
-        StartCoroutine(gController.FadeSpriteToFullAlpha(fadeTime, spriteBackground));
+        StartCoroutine(gController.FadeSpriteToFullAlpha(fadeTime, imgBackground));
         StartCoroutine(SetUp());
     }
 
@@ -101,8 +102,16 @@ public class MainNode : MonoBehaviour {
                 width = CONST_WIDTH;
                 height = CONST_HEIGHT;
             }
+
+/*#if UNITY_EDITOR
+            width = 6;
+            height = 7;
+#endif*/
             offSet = Mathf.RoundToInt(height / 2f);
             allCreatedNodes = new GameObject[width, height];
+
+            //Setup Background
+            UpdateSizeBackground();
         }
     }
 
@@ -122,6 +131,20 @@ public class MainNode : MonoBehaviour {
             }
         }
         CurrentState = State.READY;
+    }
+
+    void UpdateSizeBackground()
+    {
+        if (imgBackground == null)
+            return;
+        RectTransform rectImgBackground = imgBackground.gameObject.GetComponent<RectTransform>();
+        if (rectImgBackground == null)
+            return;
+        Vector2 sizeDelta = rectImgBackground.sizeDelta;
+        sizeDelta.x = (width + 1) * ConstantManager.NODE_SIZE;
+        sizeDelta.y = (height + 1) * ConstantManager.NODE_SIZE;
+        rectImgBackground.sizeDelta = sizeDelta;
+
     }
 
     private GameObject CreateNode(int column, int row)
@@ -238,7 +261,7 @@ public class MainNode : MonoBehaviour {
         if(score > 0)
         {
             if(gController != null)
-                gController.ShowFlyScore(Util.NumberFormat(score), trans);
+                gController.ShowFlyScore(Util.NumberFormat(score), trans, 1.2f);
             if(userData != null)
                 userData.IncreaseScore(score, false);
         }
@@ -376,33 +399,32 @@ public class MainNode : MonoBehaviour {
 
 
     #region HighLight Node
-    public void ShowHightLight(Vector2 pos)
+    public void SetNodeHighlightPos(int column, int row)
     {
-        if (highLightPrefab == null)
+        if (nodeHighLigh == null)
             return;
-        highLightPrefab.transform.position = pos;
-        highLightPrefab.SetActive(true);
+        nodeHighLigh.SetNodeHighlightPos(column, row);
     }
 
     public void HideHighLight()
     {
-        if (highLightPrefab == null)
+        if (nodeHighLigh == null)
             return;
-        highLightPrefab.SetActive(false);
+        nodeHighLigh.HideHighlight();
     }
 
-    public Vector2 GetPosHighLight()
+    public Vector2 GetHighlightInfo()
     {
-        if (highLightPrefab == null)
+        if (nodeHighLigh == null)
             return Vector2.zero;
-        return highLightPrefab.transform.position;
+        return nodeHighLigh.GetHighlightInfo();
     }
 
     public bool IsShowingHighLight()
     {
-        if (highLightPrefab == null)
+        if (nodeHighLigh == null)
             return false;
-        return highLightPrefab.activeSelf;
+        return nodeHighLigh.gameObject.activeSelf;
     }
 
     #endregion
