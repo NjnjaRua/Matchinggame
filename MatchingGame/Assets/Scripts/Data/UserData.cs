@@ -20,7 +20,10 @@ public class UserData : MonoBehaviour {
         Init();
     }
 
-
+    private void OnApplicationQuit()
+    {
+        QuitGame();
+    }
 
     private void Update()
     {
