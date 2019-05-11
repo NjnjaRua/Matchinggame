@@ -10,6 +10,9 @@ public class MainGame : MonoBehaviour {
     [SerializeField]
     public Text txtScore;
 
+    [SerializeField]
+    private FacebookDisplay fbDisplay;
+
     private UserData userData;
     SoundManager soundManager;
 
@@ -53,6 +56,7 @@ public class MainGame : MonoBehaviour {
             txtScore.text = Util.NumberFormat(userData.GetScore());
             PlayAnim();
         }
+        fbDisplay.UpdateFacebookUI();
         //todo more others UI
     }
 
