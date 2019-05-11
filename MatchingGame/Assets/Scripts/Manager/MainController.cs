@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class MainController : MonoBehaviour {
     private static MainController mainController;
+    public static string SCENE_LOADING = "Loading";
     public static string SCENE_INIT = "Init";
     public static string SCENE_MAIN_GAME = "Main";
 
@@ -51,10 +52,17 @@ public class MainController : MonoBehaviour {
         sceneLoadTask.allowSceneActivation = false;
         while (!sceneLoadTask.isDone)
         {
-            if (sceneLoadTask.progress >= 0.9f)
+            if(sceneLoadTask.progress >= 0.9f)
                 sceneLoadTask.allowSceneActivation = true;
+            if(!string.IsNullOrEmpty(currentSceneName) && currentSceneName != SCENE_INIT && currentSceneName != SCENE_LOADING)
+            {
+                if (LoadingScript.InstanceObject != null)
+                    LoadingScript.InstanceObject.ShowUpdate((int)(sceneLoadTask.progress * 100) + "%", (int)(sceneLoadTask.progress * 100));
+            }
             yield return null;
         }
         sceneLoadTask.allowSceneActivation = true;
+        if (!string.IsNullOrEmpty(currentSceneName) && currentSceneName != SCENE_INIT && currentSceneName != SCENE_LOADING)
+            LoadingScript.InstanceObject.ShowUpdate((int)(sceneLoadTask.progress * 100) + "%", (int)(sceneLoadTask.progress * 100));
     }
 }

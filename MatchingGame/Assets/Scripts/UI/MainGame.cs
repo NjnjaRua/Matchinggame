@@ -62,6 +62,8 @@ public class MainGame : MonoBehaviour {
             return;
         Sequence seq = DOTween.Sequence();
         float duration = 0.3f;
+        if (soundManager != null)
+            soundManager.PlaySound(SoundId.FLY);
         seq.Append(txtScore.transform.DOScale(new Vector3(1.2f, 1.2f, 1.2f), duration));
         seq.Append(txtScore.transform.DOScale(new Vector3(1f, 1f, 1f), duration));
     }

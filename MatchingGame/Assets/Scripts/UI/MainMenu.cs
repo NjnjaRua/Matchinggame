@@ -10,9 +10,6 @@ public class MainMenu : MonoBehaviour {
     private Text txtBestScore;
 
     [SerializeField]
-    private Text txtHint;
-
-    [SerializeField]
     private GameObject btnPlay;
 
     public float duration = 0.5f;
@@ -30,17 +27,7 @@ public class MainMenu : MonoBehaviour {
         if (soundManager != null)
             soundManager.PlaySound(SoundId.PLAYING, true);
         txtBestScore.text = (GameSave.GetInstance() ? Util.NumberFormat(GameSave.GetInstance().GetBestScore()) : Util.NumberFormat(0));
-        txtHint.text = GetRandomHint();
         Util.PlayAnim(btnPlay, btnPlay.transform.localScale, duration);
-    }
-
-    private string GetRandomHint()
-    {
-        List<string> hints = ConstantManager.GetHintConst();
-        if (hints == null || hints.Count <= 0)
-            return ConstantManager.HINT_DEFAULT;
-        int random = Random.Range(0, hints.Count);
-        return hints[random];
     }
 
     public void OnPlay()

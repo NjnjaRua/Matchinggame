@@ -11,7 +11,9 @@ public enum SoundId
     SWAP,
     SCORE, 
     CREATE,
-    QUIT
+    QUIT,
+    LOADING,
+    FLY
 }
 
 
